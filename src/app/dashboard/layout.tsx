@@ -2,10 +2,11 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { ReactNode } from "react";
-const CommonLayout = ({ children }: { children: ReactNode }) => {
+import { AuthGuard } from "@/components/shared/AuthGuard";
+
+const DashboardLayout = ({ children }: { children: ReactNode }) => {
   return (
-    <>
-      {" "}
+    <AuthGuard>
       <SidebarProvider
         style={
           {
@@ -17,11 +18,13 @@ const CommonLayout = ({ children }: { children: ReactNode }) => {
         <AppSidebar variant="inset" />
         <SidebarInset>
           <SiteHeader />
-          {children}
+          <div className="flex-1 overflow-auto">
+            {children}
+          </div>
         </SidebarInset>
       </SidebarProvider>
-    </>
+    </AuthGuard>
   );
 };
 
-export default CommonLayout;
+export default DashboardLayout;

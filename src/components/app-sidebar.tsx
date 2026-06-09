@@ -2,211 +2,135 @@
 
 import * as React from "react";
 import {
-  IconBrandProducthunt,
-  IconCamera,
-  IconCategory,
   IconChartBar,
   IconDashboard,
-  IconDashboardFilled,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
-  IconList,
-  IconListDetails,
-  IconMenuOrder,
-  IconReport,
-  IconSearch,
   IconSettings,
   IconUsers,
-  IconUsersGroup,
+  IconCreditCard,
+  IconLogout,
+  IconHeartbeat,
 } from "@tabler/icons-react";
 
 import { NavDocuments } from "@/components/nav-documents";
-import { NavMain } from "@/components/nav-main";
 import { NavSecondary } from "@/components/nav-secondary";
-import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import Image from "next/image";
-import logo from "@/assets/logo.png";
+import { useDispatch, useSelector } from "react-redux";
+import { RootState, AppDispatch } from "@/lib/store/store";
+import { logout } from "@/lib/store/authSlice";
+import { useRouter } from "next/navigation";
 
 export const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
+  documents: [
     {
-      title: "Dashboard",
-      url: "#",
+      name: "Dashboard",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: IconFolder,
-    },
-    {
-      title: "Team",
-      url: "#",
+      name: "Users",
+      url: "/dashboard/users",
       icon: IconUsers,
     },
-  ],
-  navClouds: [
     {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
+      name: "Subscriptions",
+      url: "/dashboard/subscriptions",
+      icon: IconCreditCard,
     },
   ],
   navSecondary: [
     {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Dashboard",
-      url: "/",
-      icon: IconDashboard,
-    },
-    {
-      name: "Category Management",
-      url: "/category",
-      icon: IconCategory,
-    },
-    {
-      name: "Product Management",
-      url: "/product",
-      icon: IconBrandProducthunt,
-    },
-    {
-      name: "Order Management",
-      url: "/order",
-      icon: IconMenuOrder,
-    },
-    {
-      name: "User List",
-      url: "/user",
-      icon: IconUsersGroup,
-    },
-    {
-      name: "Banner",
-      url: "/banner",
-      icon: IconList,
-    },
-    {
-      name: "Settings",
-      url: "/settings",
+      title: "Profile",
+      url: "/dashboard/profile",
       icon: IconSettings,
     },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    router.replace("/login");
+  };
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            {/* <SidebarMenuButton asChild className=" flex items-center border"> */}
-            <div className="flex items-center px-8 pb-2">
-              <Link href="/" className="block w-20 h-20">
-                <Image
-                  src={logo}
-                  className="w-full h-full"
-                  alt="Marbapp logo"
-                />
+            <div className="flex items-center gap-3 px-4 py-4">
+              <Link href="/dashboard" className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "var(--brand-accent)" }}
+                >
+                  <IconHeartbeat size={22} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold leading-tight" style={{ color: "var(--brand-text-primary)" }}>
+                    Yasmin
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--brand-text-muted)" }}>
+                    Admin Dashboard
+                  </p>
+                </div>
               </Link>
             </div>
-            {/* </SidebarMenuButton> */}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
-        {/* <NavMain items={data.navMain} /> */}
         <NavDocuments items={data.documents} />
-        {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
+        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
-      {/* <SidebarFooter>
-        <NavUser user={data.user} />
-      </SidebarFooter> */}
+
+      <SidebarFooter>
+        <div className="p-4 border-t" style={{ borderColor: "var(--brand-border)" }}>
+          {/* User Info */}
+          {user && (
+            <div className="flex items-center gap-3 mb-3">
+              <div
+                className="w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
+                style={{ background: "var(--brand-accent)" }}
+              >
+                {user.name?.charAt(0) || user.email?.charAt(0) || "A"}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate" style={{ color: "var(--brand-text-primary)" }}>
+                  {user.name || "Admin"}
+                </p>
+                <p className="text-xs truncate" style={{ color: "var(--brand-text-muted)" }}>
+                  {user.email}
+                </p>
+              </div>
+            </div>
+          )}
+          {/* Logout */}
+          <button
+            onClick={handleLogout}
+            id="sidebar-logout"
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer"
+            style={{ color: "var(--status-danger)" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--status-danger-bg)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+          >
+            <IconLogout size={16} />
+            Sign Out
+          </button>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }

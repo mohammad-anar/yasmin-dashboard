@@ -2,8 +2,11 @@
 
 import { Eye, EyeOff, Lock } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { useResetPasswordMutation } from "@/lib/store/api/authApi";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface ResetPasswordForm {
   newPassword: string;
@@ -11,8 +14,24 @@ interface ResetPasswordForm {
 }
 
 export default function ResetPasswordPage() {
+  const router = useRouter();
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [token, setToken] = useState("");
+
+  const [resetPassword, { isLoading }] = useResetPasswordMutation();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tokenParam = params.get("token") || "";
+      setToken(tokenParam);
+      if (!tokenParam) {
+        toast.error("Password reset token is missing. Please request a new code.");
+      }
+    }
+  }, []);
+
   const {
     register,
     handleSubmit,
@@ -27,8 +46,24 @@ export default function ResetPasswordPage() {
 
   const newPassword = watch("newPassword");
 
-  const onSubmit = (data: ResetPasswordForm) => {
-    console.log("Password reset:", data);
+  const onSubmit = async (data: ResetPasswordForm) => {
+    if (!token) {
+      toast.error("Missing reset token. Please request another OTP.");
+      return;
+    }
+
+    try {
+      const response = await resetPassword({
+        resetToken: token,
+        newPassword: data.newPassword,
+      }).unwrap();
+
+      toast.success(response.message || "Password reset successfully!");
+      router.push("/login");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err?.data?.message || "Failed to reset password. The link may have expired.");
+    }
   };
 
   return (
@@ -67,8 +102,7 @@ export default function ResetPasswordPage() {
                   message: "Password must be at least 8 characters",
                 },
               })}
-              className="w-full pl-10 pr-10 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring"
-              style={{ backgroundColor: "var(--input)" }}
+              className="w-full pl-10 pr-10 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring bg-input/30"
             />
             <button
               type="button"
@@ -103,8 +137,7 @@ export default function ResetPasswordPage() {
                 validate: (value) =>
                   value === newPassword || "Passwords do not match",
               })}
-              className="w-full pl-10 pr-10 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring"
-              style={{ backgroundColor: "var(--input)" }}
+              className="w-full pl-10 pr-10 py-3 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-ring bg-input/30"
             />
             <button
               type="button"
@@ -124,17 +157,18 @@ export default function ResetPasswordPage() {
         {/* Confirm Button */}
         <button
           type="submit"
-          className="w-full py-3 rounded-lg font-semibold text-white transition-opacity hover:opacity-90"
+          disabled={isLoading || !token}
+          className="w-full py-3 rounded-lg font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ backgroundColor: "#c9a227" }}
         >
-          Confirm
+          {isLoading ? "Resetting..." : "Confirm"}
         </button>
       </form>
 
       {/* Back to Login Link */}
       <div className="text-center mt-6">
         <Link
-          href="/"
+          href="/login"
           className="text-accent text-sm font-medium hover:underline"
         >
           Back to login

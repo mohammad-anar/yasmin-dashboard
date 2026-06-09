@@ -18,6 +18,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { logout } from "@/lib/store/authSlice";
 
 export function NavUser({
   user,
@@ -29,10 +31,11 @@ export function NavUser({
   };
 }) {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { isMobile } = useSidebar();
 
   const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
+    dispatch(logout());
     router.push("/login");
   };
 
