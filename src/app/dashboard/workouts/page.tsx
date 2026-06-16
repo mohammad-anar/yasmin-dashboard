@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useGetWorkoutsQuery,
   useCreateWorkoutMutation,
+  useUpdateWorkoutMutation,
   useDeleteWorkoutMutation,
   Workout,
   Exercise,
 } from "@/lib/store/api/workoutsApi";
-import { ChevronLeft, ChevronRight, Plus, X, Loader2, Dumbbell, Trash2, Eye } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, X, Loader2, Dumbbell, Trash2, Eye, Pencil } from "lucide-react";
 
 const PHASES = ["menstrual", "follicular", "ovulatory", "luteal", "all"];
 const INTENSITIES = ["low", "moderate", "high"];
@@ -16,13 +17,17 @@ const INTENSITIES = ["low", "moderate", "high"];
 function CreateWorkoutModal({
   open,
   onClose,
-  onCreate,
+  onSubmit,
   isLoading,
+  initialWorkout,
+  mode,
 }: {
   open: boolean;
   onClose: () => void;
-  onCreate: (data: Partial<Workout>) => void;
+  onSubmit: (data: Partial<Workout>) => void;
   isLoading: boolean;
+  initialWorkout?: Partial<Workout> | null;
+  mode: "create" | "edit";
 }) {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
@@ -36,6 +41,34 @@ function CreateWorkoutModal({
   const [exercises, setExercises] = useState<Exercise[]>([
     { name: "", sets: [{ reps: "10" }] },
   ]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    if (initialWorkout) {
+      setName(initialWorkout.name ?? "");
+      setDesc(initialWorkout.desc ?? "");
+      setSelectedPhases(initialWorkout.phase ?? []);
+      setIntensity(initialWorkout.intensity ?? "low");
+      setDuration(initialWorkout.duration ?? "15-30");
+      setDurationMins((initialWorkout.duration_mins ?? 20).toString());
+      setBodypart(initialWorkout.bodypart ?? "full body");
+      setEquipment(initialWorkout.equipment ?? "no equipment");
+      setPhaseNote(initialWorkout.phaseNote ?? "");
+      setExercises((initialWorkout.exercises as Exercise[]) ?? [{ name: "", sets: [{ reps: "10" }] }]);
+    } else {
+      setName("");
+      setDesc("");
+      setSelectedPhases([]);
+      setIntensity("low");
+      setDuration("15-30");
+      setDurationMins("20");
+      setBodypart("full body");
+      setEquipment("no equipment");
+      setPhaseNote("");
+      setExercises([{ name: "", sets: [{ reps: "10" }] }]);
+    }
+  }, [open, initialWorkout]);
 
   if (!open) return null;
 
@@ -91,7 +124,8 @@ function CreateWorkoutModal({
       return;
     }
 
-    onCreate({
+    onSubmit({
+      id: initialWorkout?.id,
       name,
       desc,
       phase: selectedPhases,
@@ -109,7 +143,9 @@ function CreateWorkoutModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }}>
       <div className="rounded-2xl p-6 max-w-2xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]" style={{ background: "white" }}>
         <div className="flex items-center justify-between mb-5 flex-shrink-0">
-          <h3 className="font-bold text-lg" style={{ color: "var(--brand-text-primary)" }}>Add New Workout</h3>
+          <h3 className="font-bold text-lg" style={{ color: "var(--brand-text-primary)" }}>
+            {mode === "edit" ? "Edit Workout" : "Add New Workout"}
+          </h3>
           <button
             onClick={onClose}
             className="p-1.5 rounded-lg transition-all"
@@ -357,7 +393,7 @@ function CreateWorkoutModal({
             style={{ background: "var(--brand-accent)" }}
           >
             {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-            Save Workout
+            {mode === "edit" ? "Update Workout" : "Save Workout"}
           </button>
         </div>
       </div>
@@ -464,22 +500,40 @@ function ViewWorkoutModal({
 export default function WorkoutsPage() {
   const { data: workouts, isFetching, refetch } = useGetWorkoutsQuery();
   const [createWorkout, { isLoading: isCreating }] = useCreateWorkoutMutation();
+  const [updateWorkout, { isLoading: isUpdating }] = useUpdateWorkoutMutation();
   const [deleteWorkout] = useDeleteWorkoutMutation();
 
-  const [createOpen, setCreateOpen] = useState(false);
+  const [workoutModalOpen, setWorkoutModalOpen] = useState(false);
+  const [editingWorkout, setEditingWorkout] = useState<Workout | null>(null);
   const [viewingWorkout, setViewingWorkout] = useState<Workout | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const handleCreate = async (workoutData: Partial<Workout>) => {
+  const handleCreateOrUpdate = async (workoutData: Partial<Workout>) => {
     try {
-      await createWorkout(workoutData).unwrap();
-      setCreateOpen(false);
-      setToastMessage("Workout added to library successfully!");
+      if (editingWorkout?.id) {
+        await updateWorkout({ id: editingWorkout.id, body: workoutData }).unwrap();
+        setToastMessage("Workout updated successfully!");
+      } else {
+        await createWorkout(workoutData).unwrap();
+        setToastMessage("Workout added to library successfully!");
+      }
+      setWorkoutModalOpen(false);
+      setEditingWorkout(null);
       setTimeout(() => setToastMessage(null), 3000);
       refetch();
     } catch (e: any) {
-      alert(`Error: ${e?.data?.message || "Failed to create workout"}`);
+      alert(`Error: ${e?.data?.message || "Failed to save workout"}`);
     }
+  };
+
+  const handleEdit = (workout: Workout) => {
+    setEditingWorkout(workout);
+    setWorkoutModalOpen(true);
+  };
+
+  const handleCreateOpen = () => {
+    setEditingWorkout(null);
+    setWorkoutModalOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -520,7 +574,7 @@ export default function WorkoutsPage() {
           </p>
         </div>
         <button
-          onClick={() => setCreateOpen(true)}
+          onClick={handleCreateOpen}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-all self-start sm:self-auto cursor-pointer"
           style={{ background: "var(--brand-accent)" }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--brand-accent-hover)"; }}
@@ -608,6 +662,13 @@ export default function WorkoutsPage() {
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
+                          onClick={() => handleEdit(workout)}
+                          className="p-1.5 rounded-lg transition-all border cursor-pointer"
+                          style={{ borderColor: "var(--brand-border)", background: "var(--brand-surface)", color: "var(--brand-text-secondary)" }}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handleDelete(workout.id)}
                           className="p-1.5 rounded-lg transition-all border hover:bg-red-50 text-red-500 cursor-pointer"
                           style={{ borderColor: "var(--brand-border)" }}
@@ -633,10 +694,12 @@ export default function WorkoutsPage() {
       </div>
 
       <CreateWorkoutModal
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onCreate={handleCreate}
-        isLoading={isCreating}
+        open={workoutModalOpen}
+        onClose={() => { setWorkoutModalOpen(false); setEditingWorkout(null); }}
+        onSubmit={handleCreateOrUpdate}
+        isLoading={isCreating || isUpdating}
+        initialWorkout={editingWorkout}
+        mode={editingWorkout ? "edit" : "create"}
       />
 
       <ViewWorkoutModal

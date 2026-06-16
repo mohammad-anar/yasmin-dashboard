@@ -49,6 +49,14 @@ export const workoutsApi = createApi({
       }),
       invalidatesTags: [{ type: "Workouts", id: "LIST" }],
     }),
+    updateWorkout: builder.mutation<Workout, { id: string; body: Partial<Workout> }>({
+      query: ({ id, body }) => ({
+        url: `/workout/library/${id}`,
+        method: "PUT",
+        body,
+      }),
+      invalidatesTags: [{ type: "Workouts", id: "LIST" }],
+    }),
     deleteWorkout: builder.mutation<{ success: boolean; message: string }, string>({
       query: (id) => ({
         url: `/workout/library/${id}`,
@@ -62,5 +70,6 @@ export const workoutsApi = createApi({
 export const {
   useGetWorkoutsQuery,
   useCreateWorkoutMutation,
+  useUpdateWorkoutMutation,
   useDeleteWorkoutMutation,
 } = workoutsApi;
