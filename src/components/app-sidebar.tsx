@@ -9,6 +9,9 @@ import {
   IconCreditCard,
   IconLogout,
   IconHeartbeat,
+  IconList,
+  IconBarbell,
+  IconApple,
 } from "@tabler/icons-react";
 
 import { NavDocuments } from "@/components/nav-documents";
@@ -43,6 +46,21 @@ export const data = {
       name: "Subscriptions",
       url: "/dashboard/subscriptions",
       icon: IconCreditCard,
+    },
+    {
+      name: "Onboarding Config",
+      url: "/dashboard/onboarding",
+      icon: IconList,
+    },
+    {
+      name: "Workouts",
+      url: "/dashboard/workouts",
+      icon: IconBarbell,
+    },
+    {
+      name: "Nutrition",
+      url: "/dashboard/nutrition",
+      icon: IconApple,
     },
   ],
   navSecondary: [

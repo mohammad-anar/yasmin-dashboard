@@ -56,6 +56,8 @@ const authSlice = createSlice({
         localStorage.setItem("yd_access_token", action.payload.accessToken);
         localStorage.setItem("yd_refresh_token", action.payload.refreshToken);
         localStorage.setItem("yd_user", JSON.stringify(action.payload.user));
+        document.cookie = `yd_access_token=${action.payload.accessToken}; path=/; max-age=86400; SameSite=Lax`;
+        document.cookie = `yd_user_role=${action.payload.user.role}; path=/; max-age=86400; SameSite=Lax`;
       }
     },
     updateTokens: (
@@ -67,6 +69,7 @@ const authSlice = createSlice({
       if (typeof window !== "undefined") {
         localStorage.setItem("yd_access_token", action.payload.accessToken);
         localStorage.setItem("yd_refresh_token", action.payload.refreshToken);
+        document.cookie = `yd_access_token=${action.payload.accessToken}; path=/; max-age=86400; SameSite=Lax`;
       }
     },
     logout: (state) => {
@@ -78,6 +81,8 @@ const authSlice = createSlice({
         localStorage.removeItem("yd_access_token");
         localStorage.removeItem("yd_refresh_token");
         localStorage.removeItem("yd_user");
+        document.cookie = "yd_access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        document.cookie = "yd_user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
       }
     },
   },
