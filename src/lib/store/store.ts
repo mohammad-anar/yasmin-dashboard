@@ -6,6 +6,7 @@ import { subscriptionsApi } from "./api/subscriptionsApi";
 import { onboardingApi } from "./api/onboardingApi";
 import { workoutsApi } from "./api/workoutsApi";
 import { nutritionApi } from "./api/nutritionApi";
+import { reportsApi } from "./api/reportsApi";
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     [onboardingApi.reducerPath]: onboardingApi.reducer,
     [workoutsApi.reducerPath]: workoutsApi.reducer,
     [nutritionApi.reducerPath]: nutritionApi.reducer,
+    [reportsApi.reducerPath]: reportsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -24,7 +26,8 @@ export const store = configureStore({
       subscriptionsApi.middleware,
       onboardingApi.middleware,
       workoutsApi.middleware,
-      nutritionApi.middleware
+      nutritionApi.middleware,
+      reportsApi.middleware
     ),
 });
 
