@@ -1,0 +1,19 @@
+services:
+  dashboard:
+    container_name: yasmin-dashboard
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-https://api.herwellness.app/api/v1}
+      - NEXT_PUBLIC_SOCKET_URL=${NEXT_PUBLIC_SOCKET_URL:-https://api.herwellness.app}
+    stdin_open: true
+    tty: true
