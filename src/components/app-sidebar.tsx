@@ -13,6 +13,7 @@ import {
   IconBarbell,
   IconApple,
   IconFlag,
+  IconMessage,
 } from "@tabler/icons-react";
 
 import { NavDocuments } from "@/components/nav-documents";
@@ -62,6 +63,11 @@ export const data = {
       name: "Nutrition",
       url: "/dashboard/nutrition",
       icon: IconApple,
+    },
+    {
+      name: "Community Posts",
+      url: "/dashboard/community",
+      icon: IconMessage,
     },
     {
       name: "Community Reports",
