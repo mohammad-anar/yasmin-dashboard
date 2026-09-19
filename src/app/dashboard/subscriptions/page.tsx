@@ -13,7 +13,6 @@ import Link from "next/link";
 
 const TYPE_FILTERS = [
   { label: "All Plans", value: "" },
-  { label: "Weekly", value: "weekly" },
   { label: "Monthly", value: "monthly" },
   { label: "Yearly", value: "yearly" },
 ];
@@ -36,7 +35,7 @@ function GrantModal({
   isLoading: boolean;
 }) {
   const [targetUserId, setTargetUserId] = useState("");
-  const [type, setType] = useState<"weekly" | "monthly" | "yearly">("monthly");
+  const [type, setType] = useState<"monthly" | "yearly">("monthly");
   const [customDays, setCustomDays] = useState("");
   const [userSearch, setUserSearch] = useState("");
 
@@ -114,8 +113,8 @@ function GrantModal({
             <label className="block text-sm font-semibold mb-1.5" style={{ color: "var(--brand-text-secondary)" }}>
               Plan Type
             </label>
-            <div className="grid grid-cols-3 gap-2">
-              {(["weekly", "monthly", "yearly"] as const).map((t) => (
+            <div className="grid grid-cols-2 gap-2">
+              {(["monthly", "yearly"] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setType(t)}
@@ -149,7 +148,7 @@ function GrantModal({
               />
             </div>
             <p className="text-xs mt-1" style={{ color: "var(--brand-text-muted)" }}>
-              Default: weekly=7d, monthly=30d, yearly=365d
+              Default: monthly=30d, yearly=365d
             </p>
           </div>
 
@@ -313,7 +312,6 @@ export default function SubscriptionsPage() {
               {data?.data?.map((sub) => {
                 const active = !isPast(parseISO(sub.endDate));
                 const typeColor: Record<string, { bg: string; color: string }> = {
-                  weekly: { bg: "#fdf4e7", color: "#D4821A" },
                   monthly: { bg: "#F5F0EA", color: "#5A4D42" },
                   yearly: { bg: "var(--status-success-bg)", color: "var(--status-success)" },
                 };

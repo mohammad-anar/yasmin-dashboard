@@ -38,7 +38,7 @@ export interface PaginatedResponse<T> {
 
 export interface GrantSubscriptionRequest {
   targetUserId: string;
-  type: "weekly" | "monthly" | "yearly";
+  type: "monthly" | "yearly";
   durationDays?: number;
 }
 
