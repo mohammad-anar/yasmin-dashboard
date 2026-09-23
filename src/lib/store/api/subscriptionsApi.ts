@@ -5,6 +5,10 @@ export interface Subscription {
   id: string;
   userId: string;
   type: string;
+  platform?: string | null;
+  productId?: string | null;
+  orderId?: string | null;
+  subscriptionState?: string | null;
   startDate: string;
   endDate: string;
   token: string | null;

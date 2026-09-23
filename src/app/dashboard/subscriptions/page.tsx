@@ -296,7 +296,7 @@ export default function SubscriptionsPage() {
           <table className="w-full">
             <thead>
               <tr style={{ background: "var(--brand-surface)" }}>
-                {["User", "Plan", "Status", "Start Date", "End Date", "Token", "Actions"].map((h) => (
+                {["User", "Platform", "Plan", "Status", "Start Date", "End Date", "Token", "Actions"].map((h) => (
                   <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold whitespace-nowrap" style={{ color: "var(--brand-text-muted)" }}>{h}</th>
                 ))}
               </tr>
@@ -304,7 +304,7 @@ export default function SubscriptionsPage() {
             <tbody>
               {isFetching && !data && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-16 text-center">
+                  <td colSpan={8} className="px-5 py-16 text-center">
                     <Loader2 className="w-8 h-8 mx-auto animate-spin" style={{ color: "var(--brand-accent)" }} />
                   </td>
                 </tr>
@@ -316,6 +316,12 @@ export default function SubscriptionsPage() {
                   yearly: { bg: "var(--status-success-bg)", color: "var(--status-success)" },
                 };
                 const tc = typeColor[sub.type] || typeColor.monthly;
+
+                const platformBadge = sub.platform?.toLowerCase() === "ios"
+                  ? { label: "iOS (Apple)", bg: "#F0F0F5", color: "#1D1D1F" }
+                  : sub.platform?.toLowerCase() === "android"
+                  ? { label: "Android", bg: "#E8F5E9", color: "#2E7D32" }
+                  : { label: sub.platform || "Direct", bg: "var(--brand-surface)", color: "var(--brand-text-muted)" };
 
                 return (
                   <tr
@@ -339,6 +345,12 @@ export default function SubscriptionsPage() {
                           <p className="text-xs" style={{ color: "var(--brand-text-muted)" }}>{sub.user.email}</p>
                         </div>
                       </div>
+                    </td>
+                    {/* Platform */}
+                    <td className="px-5 py-4">
+                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ background: platformBadge.bg, color: platformBadge.color }}>
+                        {platformBadge.label}
+                      </span>
                     </td>
                     {/* Plan */}
                     <td className="px-5 py-4">
