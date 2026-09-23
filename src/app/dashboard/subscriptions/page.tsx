@@ -1,15 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   useGetAllSubscriptionsQuery,
   useGrantSubscriptionMutation,
   Subscription,
 } from "@/lib/store/api/subscriptionsApi";
 import { useGetUsersQuery } from "@/lib/store/api/usersApi";
-import { CreditCard, ChevronLeft, ChevronRight, Filter, Plus, X, Loader2, Calendar, CheckCircle, XCircle } from "lucide-react";
+import { CreditCard, ChevronLeft, ChevronRight, Filter, Plus, X, Loader2, CheckCircle, XCircle, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { format, parseISO, isPast } from "date-fns";
 import Link from "next/link";
+
+type SortKey = "startDate" | "endDate" | "createdAt" | "type" | "";
+type SortDir = "asc" | "desc";
+
+function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
+  if (sortKey !== col) return <ArrowUpDown className="w-3 h-3 opacity-40 ml-1 inline" />;
+  return sortDir === "asc"
+    ? <ArrowUp className="w-3 h-3 ml-1 inline" style={{ color: "var(--brand-accent)" }} />
+    : <ArrowDown className="w-3 h-3 ml-1 inline" style={{ color: "var(--brand-accent)" }} />;
+}
 
 const TYPE_FILTERS = [
   { label: "All Plans", value: "" },
@@ -212,7 +222,44 @@ export default function SubscriptionsPage() {
     }
   };
 
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  };
+
+  const sortedData = useMemo(() => {
+    if (!data?.data) return [];
+    return [...data.data].sort((a, b) => {
+      let valA: any;
+      let valB: any;
+      if (sortKey === "startDate") { valA = new Date(a.startDate).getTime(); valB = new Date(b.startDate).getTime(); }
+      else if (sortKey === "endDate") { valA = new Date(a.endDate).getTime(); valB = new Date(b.endDate).getTime(); }
+      else if (sortKey === "createdAt") { valA = new Date(a.createdAt).getTime(); valB = new Date(b.createdAt).getTime(); }
+      else if (sortKey === "type") { valA = a.type; valB = b.type; }
+      else return 0;
+      if (valA < valB) return sortDir === "asc" ? -1 : 1;
+      if (valA > valB) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [data?.data, sortKey, sortDir]);
+
   const totalPages = data?.meta.totalPages ?? 1;
+
+  const HEADERS: { label: string; key: SortKey }[] = [
+    { label: "User", key: "" },
+    { label: "Platform", key: "" },
+    { label: "Plan", key: "type" },
+    { label: "Status", key: "" },
+    { label: "Start Date", key: "startDate" },
+    { label: "End Date", key: "endDate" },
+    { label: "Purchased", key: "createdAt" },
+    { label: "Token", key: "" },
+    { label: "Actions", key: "" },
+  ];
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6 lg:p-8">
@@ -296,20 +343,31 @@ export default function SubscriptionsPage() {
           <table className="w-full">
             <thead>
               <tr style={{ background: "var(--brand-surface)" }}>
-                {["User", "Platform", "Plan", "Status", "Start Date", "End Date", "Token", "Actions"].map((h) => (
-                  <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold whitespace-nowrap" style={{ color: "var(--brand-text-muted)" }}>{h}</th>
+                {HEADERS.map((h) => (
+                  <th
+                    key={h.label}
+                    className="text-left px-5 py-3.5 text-xs font-semibold whitespace-nowrap select-none"
+                    style={{
+                      color: sortKey === h.key && h.key ? "var(--brand-accent)" : "var(--brand-text-muted)",
+                      cursor: h.key ? "pointer" : "default",
+                    }}
+                    onClick={() => h.key && handleSort(h.key)}
+                  >
+                    {h.label}
+                    {h.key && <SortIcon col={h.key} sortKey={sortKey} sortDir={sortDir} />}
+                  </th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {isFetching && !data && (
                 <tr>
-                  <td colSpan={8} className="px-5 py-16 text-center">
+                  <td colSpan={9} className="px-5 py-16 text-center">
                     <Loader2 className="w-8 h-8 mx-auto animate-spin" style={{ color: "var(--brand-accent)" }} />
                   </td>
                 </tr>
               )}
-              {data?.data?.map((sub) => {
+              {sortedData.map((sub) => {
                 const active = !isPast(parseISO(sub.endDate));
                 const typeColor: Record<string, { bg: string; color: string }> = {
                   monthly: { bg: "#F5F0EA", color: "#5A4D42" },
@@ -376,7 +434,7 @@ export default function SubscriptionsPage() {
                     </td>
                     {/* Start Date */}
                     <td className="px-5 py-4">
-                      <span className="text-xs" style={{ color: "var(--brand-text-muted)" }}>
+                      <span className="text-xs" style={{ color: sortKey === "startDate" ? "var(--brand-accent)" : "var(--brand-text-muted)" }}>
                         {format(parseISO(sub.startDate), "MMM d, yyyy")}
                       </span>
                     </td>
@@ -384,9 +442,15 @@ export default function SubscriptionsPage() {
                     <td className="px-5 py-4">
                       <span
                         className="text-xs font-medium"
-                        style={{ color: active ? "var(--status-success)" : "var(--status-danger)" }}
+                        style={{ color: sortKey === "endDate" ? "var(--brand-accent)" : active ? "var(--status-success)" : "var(--status-danger)" }}
                       >
                         {format(parseISO(sub.endDate), "MMM d, yyyy")}
+                      </span>
+                    </td>
+                    {/* Purchased At */}
+                    <td className="px-5 py-4">
+                      <span className="text-xs" style={{ color: sortKey === "createdAt" ? "var(--brand-accent)" : "var(--brand-text-muted)" }}>
+                        {format(parseISO(sub.createdAt), "MMM d, yyyy")}
                       </span>
                     </td>
                     {/* Token */}
@@ -412,7 +476,7 @@ export default function SubscriptionsPage() {
               })}
               {data?.data?.length === 0 && !isFetching && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-16 text-center">
+                  <td colSpan={9} className="px-5 py-16 text-center">
                     <CreditCard className="w-10 h-10 mx-auto mb-3 opacity-20" style={{ color: "var(--brand-text-muted)" }} />
                     <p className="text-sm" style={{ color: "var(--brand-text-muted)" }}>No subscriptions found</p>
                   </td>

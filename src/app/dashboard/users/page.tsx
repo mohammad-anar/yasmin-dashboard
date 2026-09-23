@@ -1,10 +1,20 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useGetUsersQuery, useBlockUserMutation, useDeleteUserMutation, User } from "@/lib/store/api/usersApi";
-import { Search, Ban, Trash2, Eye, ChevronLeft, ChevronRight, Filter, RefreshCw, UserCheck, RotateCcw } from "lucide-react";
+import { Search, Ban, Trash2, Eye, ChevronLeft, ChevronRight, Filter, RefreshCw, UserCheck, RotateCcw, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
+
+type SortKey = "createdAt" | "";
+type SortDir = "asc" | "desc";
+
+function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
+  if (sortKey !== col) return <ArrowUpDown className="w-3 h-3 opacity-40 ml-1 inline" />;
+  return sortDir === "asc"
+    ? <ArrowUp className="w-3 h-3 ml-1 inline" style={{ color: "var(--brand-accent)" }} />
+    : <ArrowDown className="w-3 h-3 ml-1 inline" style={{ color: "var(--brand-accent)" }} />;
+}
 
 const ROLE_FILTERS = [
   { label: "All Users", value: "" },
@@ -70,6 +80,8 @@ export default function UsersPage() {
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [confirmAction, setConfirmAction] = useState<{ type: "block" | "delete"; user: User } | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("createdAt");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const [blockUser, { isLoading: isBlocking }] = useBlockUserMutation();
   const [deleteUser, { isLoading: isDeleting }] = useDeleteUserMutation();
@@ -81,6 +93,20 @@ export default function UsersPage() {
   if (statusFilter === "deleted") queryParams.includeDeleted = true;
 
   const { data, isFetching, refetch } = useGetUsersQuery(queryParams);
+
+  const handleSort = () => {
+    setSortKey("createdAt");
+    setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+  };
+
+  const sortedUsers = useMemo(() => {
+    if (!data?.data) return [];
+    return [...data.data].sort((a, b) => {
+      const valA = new Date(a.createdAt).getTime();
+      const valB = new Date(b.createdAt).getTime();
+      return sortDir === "asc" ? valA - valB : valB - valA;
+    });
+  }, [data?.data, sortDir]);
 
   const handleSearchChange = useCallback((val: string) => {
     setSearch(val);
@@ -192,9 +218,18 @@ export default function UsersPage() {
           <table className="w-full">
             <thead>
               <tr style={{ background: "var(--brand-surface)" }}>
-                {["User", "Role", "Status", "Subscription", "Platform", "Joined", "Actions"].map((h) => (
+                {(["User", "Role", "Status", "Subscription", "Platform"] as const).map((h) => (
                   <th key={h} className="text-left px-5 py-3.5 text-xs font-semibold whitespace-nowrap" style={{ color: "var(--brand-text-muted)" }}>{h}</th>
                 ))}
+                <th
+                  className="text-left px-5 py-3.5 text-xs font-semibold whitespace-nowrap select-none cursor-pointer"
+                  style={{ color: sortKey === "createdAt" ? "var(--brand-accent)" : "var(--brand-text-muted)" }}
+                  onClick={handleSort}
+                >
+                  Joined
+                  <SortIcon col="createdAt" sortKey={sortKey} sortDir={sortDir} />
+                </th>
+                <th className="text-left px-5 py-3.5 text-xs font-semibold whitespace-nowrap" style={{ color: "var(--brand-text-muted)" }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -208,7 +243,7 @@ export default function UsersPage() {
                   </td>
                 </tr>
               )}
-              {data?.data?.map((user) => {
+              {sortedUsers.map((user) => {
                 const roleBadge = getRoleBadge(user.role);
                 const isDeleted = !!user.deletedAt;
                 const subActive = user.subscription && new Date(user.subscription.endDate) > new Date();
@@ -280,7 +315,7 @@ export default function UsersPage() {
                     </td>
                     {/* Joined */}
                     <td className="px-5 py-4">
-                      <span className="text-xs whitespace-nowrap" style={{ color: "var(--brand-text-muted)" }}>
+                      <span className="text-xs whitespace-nowrap" style={{ color: sortKey === "createdAt" ? "var(--brand-accent)" : "var(--brand-text-muted)" }}>
                         {format(parseISO(user.createdAt), "MMM d, yyyy")}
                       </span>
                     </td>
