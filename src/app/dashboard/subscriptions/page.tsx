@@ -200,6 +200,8 @@ export default function SubscriptionsPage() {
   const [statusFilter, setStatusFilter] = useState<"" | "active" | "expired">("");
   const [grantOpen, setGrantOpen] = useState(false);
   const [grantSuccess, setGrantSuccess] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>("startDate");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const { data, isFetching, refetch } = useGetAllSubscriptionsQuery({
     page,
